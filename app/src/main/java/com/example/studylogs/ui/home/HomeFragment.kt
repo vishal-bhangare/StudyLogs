@@ -21,7 +21,7 @@ class HomeFragment : Fragment() {
 
     private val timerOptions = arrayOf(5, 10, 15, 25, 30, 45, 60, 90, 120)
     private val tagOptions = arrayOf("Study", "Work", "Reading", "Exercise", "Meditation")
-
+    private var selectedDuration: Int = 30
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -49,14 +49,19 @@ class HomeFragment : Fragment() {
         binding.tagButton.setOnClickListener {
             showTagSelection()
         }
-
+        binding.timer.setOnClickListener {
+            if (viewModel.isTimerMode.value == false) {
+                showTimerSelection()
+            }
+        }
         binding.startButton.setOnClickListener {
             if (viewModel.isRunning.value == true) {
                 viewModel.stopTimer()
             } else {
                 if (viewModel.isTimerMode.value == false) {
-                    showTimerSelection()
-                } else {
+                    viewModel.startTimer(selectedDuration)
+                }
+                else {
                     viewModel.startTimer()
                 }
             }
@@ -70,6 +75,9 @@ class HomeFragment : Fragment() {
 
         viewModel.isRunning.observe(viewLifecycleOwner) { isRunning ->
             binding.startButton.text = if (isRunning) "Stop" else "Start"
+            binding.switchTimer.isEnabled = !isRunning
+            binding.timer.isClickable = !isRunning
+            binding.tagButton.isClickable = !isRunning
         }
 
         viewModel.isTimerMode.observe(viewLifecycleOwner) { isTimerMode ->
@@ -83,7 +91,9 @@ class HomeFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Select Duration")
             .setItems(timerOptions.map { "$it minutes" }.toTypedArray()) { _, which ->
-                viewModel.startTimer(timerOptions[which])
+                selectedDuration = timerOptions[which]
+                viewModel.setSelectedDuration(timerOptions[which])
+                binding.timer.text = String.format("%02d:00", selectedDuration)
             }
             .show()
     }

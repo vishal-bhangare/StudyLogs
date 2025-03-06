@@ -21,11 +21,14 @@ class HomeViewModel(private val studyDao: StudyDao) : ViewModel() {
 
     private val _isTimerMode = MutableLiveData(true)
     val isTimerMode: LiveData<Boolean> = _isTimerMode
-
+    private var selectedDuration: Int = 30
     private var startTime: Long = 0
     private var elapsedTime: Long = 0
     private var currentSessionId: Long = 0
-
+    fun setSelectedDuration(duration: Int) {
+        selectedDuration = duration
+        _timeDisplay.value = String.format("%02d:00", duration)
+    }
     fun toggleMode() {
         _isTimerMode.value = !(_isTimerMode.value ?: true)
         resetTimer()
@@ -49,7 +52,7 @@ class HomeViewModel(private val studyDao: StudyDao) : ViewModel() {
                 endTime = null,
                 duration = duration,
                 tag = "Study",
-                isTimerMode = _isTimerMode.value ?: true
+                isTimerMode = (_isTimerMode.value == false)
             )
             currentSessionId = studyDao.insertSession(newSession)
             currentSession = newSession.copy(id = currentSessionId)
@@ -108,7 +111,11 @@ class HomeViewModel(private val studyDao: StudyDao) : ViewModel() {
 
     private fun resetTimer() {
         timer?.cancel()
-        _timeDisplay.value = if (_isTimerMode.value == true) "00:00" else "00:00"
+        _timeDisplay.value = if (_isTimerMode.value == false) {
+            String.format("%02d:00", selectedDuration)
+        } else {
+            "00:00"
+        }
         currentSession = null
     }
 
